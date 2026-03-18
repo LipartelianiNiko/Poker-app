@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="poker.css">
+<head>
+
+</head>
+
+<body>
+
+    <div id="auth-page" class="page active">
+        <input id="user-name" type="text" placeholder="enter name">
+        <button id="auth-btn">enter</button>
+    </div>
+
+    <div id="home-page" class="page">
+        <button id="start">start game</button>
+    </div>
+
+
+    <div id="game-page" class="page">
+        <div>
+            <div id="table">
+            <div class="table-cards">
+                <div id="flop1"></div>
+                <div id="flop2" ></div>
+                <div id="flop3"></div>
+                <div id="turn1"></div>
+                <div id="river1"></div>
+
+                <div id="seat-1" class="seat"></div>
+                <div id="seat-2" class="seat"></div>
+                <div id="seat-3" class="seat"></div>
+                <div id="seat-4" class="seat"></div>
+                <div id="seat-5" class="seat"></div>
+
+            </div>
+        </div>
+
+        <div class="user-cards">
+            <div id="card1"></div>
+            <div id="card2"></div>
+        </div>
+
+        <div class="name-display"><span id="name">name</span></div>
+
+        <div id="game-buttons">
+            <button id="leave">leave</button>
+            <button id="callbtn">call</button>
+            <button id="foldbtn">fold</button>
+            <button id="raisebtn">raise</button>
+            <button id="checkbtn">check</button>
+            <button id="all-in">all-in</button>
+            <button id="betbtn">bet</button>
+        </div>
+
+        </div id="info">
+            <div>table timer:<span id="tabletimer"></span></div>
+            <div>timer:<span id="timer"></span></div>
+            <input id="raiseamount" type="number" placeholder="raise" min="1">
+            <div>balance:<span id="balance"></span></div>
+            <div>pot:<span id="pot"></div>
+            <div>current turn :<span id="current"></span></div>
+            <div>daler:<span id="dealer"></div>
+            <div>big blind:<span id="bigblind"></div>
+            <div>small blind:<span id="smallblind"></div>
+            <div>highest bet:<span id="highestbet"></div>
+        </div>
+    </div>
+
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js"></script>
+
+</body>
+
+</html>

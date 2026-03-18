@@ -1,0 +1,185 @@
+1) declare socket.io socket for connection on client side js, const mysocket=io("server_host")
+
+2) make server listen to clients socket.io
+
+3) write action emit on client side js,
+    on button click-send this action request to server.
+    action is identified by name and its corresponding code instructions on server
+
+4)server is listening, when action request is recived, 
+    if it fits ouot code, if we have actions implemented,
+    and request and requirement match, do perform action.
+
+
+1.const mySocket = io("http://server_host"); on client side js
+
+2.on server:
+
+        io.on("connection", (socket) => {
+            // This runs once per connected client
+        });
+        
+3.emmit action:
+
+        button.onclick = () => {
+            mySocket.emit("action_name", { data: "example" });
+        };
+
+4.server listens and performs action:
+
+        io.on("connection", (socket) => {
+        socket.on("action_name", (data) => {
+            // check requirements if needed
+            // perform the corresponding server-side logic
+            socket.emit("action_result", { success: true });
+            });
+        });
+
+
+*******actions i need*********
+1.create user, after entering name, by clicking button
+2.entering a table, by clicking enter a game button
+3.once on a table:
+    * betting buttons:call, bet, raise, check, fold, all-in
+    * quit button
+
+*******how does the game work*********
+1. user comes to the site and is given the page for user creation and button 
+2. once user fills the information and clicks button, info is sent to server via socket.io
+3. user object is created with entered name, id given by server, and default balance.
+4. user can join tables by cliking button, once clikced user is added to the last table object, with less than 6 players
+5. if all tables are full, new table object is created, with id, and user is added to the table once another one joins too
+6. after joining is done by adding player objects to array of players, declared in the table class. 
+7. once at least two player are joined, dealer, small and big blinds are assigned,
+     first to indexed 0-dealer and 1-small bling and 2-big bling, player objects, and moved forward at each hand
+
+8. simuteniously, deck is created and shuffled, at each hand new hand is created and shuffled.
+
+9. betting starts from the player after big blind in preflop[0-dealer; 1-SB; 2-BB; 3-frist to bet at preflop; everyone else]
+    and continous untill every player has betted same amount or folded. 
+    betting start position moves to the first user after the dealer, at each round whoever is the first after the dealer, bets first,
+    ex:if user who was SB, doesnt fold and has chips to bet, it will be the first better the whole hand.
+
+
+
+
+now i have to manage turns, and ask users to act, according to  state(we also update state), allow only the current user to act.
+i pick current player, starting from bigbling+1, ending at small blind-this at preflop. 
+after preflop, current player starts from first active(not folded) player righ after dealer.
+we move the current player in the array goin one at a time.
+current resets every time the state is changed(at preflop, then at flop, then at river, and then at turn, and then ),
+aks them to match the current highest total betted(call, all in if they dont have enough chips o call), or go all in, or fold, 
+change state of game when all 
+
+//state will be used to determine allowed actions, each state has few actions that are differnet from state to state,
+/*states needed on table:
+        1.waiting, wait until there are at least 2 players on the table. waiting is state of table until at least 2 players are seated, 
+        when at least 2 players are seated , we start game imediatelly or allow (recomended) and then start.
+
+        2.preflop- state right after waiting, starts when we have 2 or more players on the table, 
+        inclides dealing cards to players, blind and dealer setting,
+        first betting round
+        ends when betting is done, right before revealing flop
+
+        3.flop-start wgen first round of betting is done, 
+        reveal flop cards
+        start second round of betting
+        ends when second betting is over
+
+        4.river- start when flop is over, 
+        firts reveal river card
+        then start 3rd betting round
+        stop when betting round is over
+
+        5.turn-start when river is over
+        first reveal turn card
+        start final betting round
+        ends when betting ends
+        
+        6.showdown- start when turn is over
+        reveal player cards
+        evaluate hands
+        give rewards
+
+        i need functions for all this states, one for each, and helper functions. state functions will be called in the socket connection.
+ */
+Looking at your code, I can spot several bugs. Let me go through them:
+
+**1. `advanceturn()` is called inside action methods AND then `checkandadvance()` is called again in `handleaction()` — double advancing**
+
+In `handleaction()` you call `this.checkandadvance()` after the switch, but each action method (`docall`, `doraise`, etc.) already calls `this.advanceturn()` which itself calls `this.checkandadvance()`. So `checkandadvance` runs twice every action. Remove the `this.checkandadvance()` call at the bottom of `handleaction()`.
+
+**2. `advanceturn()` calls `checkandadvance()` but `checkandadvance()` calls `advanceStage()` which resets state — then `advanceturn()` still continues after returning from `checkandadvance()`**
+
+The flow is tangled. `advanceturn` should only move the turn pointer. Stage advancement should be a separate concern triggered only from `handleaction`. The `checkandadvance()` call inside `advanceturn()` causes cascading recursive calls.
+
+**3. `resetHasActed()` also resets `contribution` to 0 — but it's called mid-hand during raise**
+
+```js
+resetHasActed(){
+    for(let p of this.table.players){
+        if(!p.folded && !p.isAllin){
+            p.hasActed=false
+            p.contribution=0  // ← BUG: wipes contributions mid-street
+        }
+    }
+}
+```
+
+This is called from `doallin()` when an all-in causes a raise. Resetting `contribution` mid-street breaks your `tocall` calculation for everyone else. Contributions should only reset between streets, not on a raise. You need two separate methods — one that only resets `hasActed` (for raises), and one that resets both (for new streets).
+
+**4. `advanceStage()` calls `checkandadvance()` at the end of showdown, which immediately calls `advanceStage()` again into "waiting" then into a new game — without any pause or client notification**
+
+```js
+case "showdown":
+    this.handevaluation()
+    this.giverevards()
+    this.checkandadvance() // ← triggers advanceStage again immediately
+```
+
+You probably want a deliberate `advanceStage()` call here, not `checkandadvance()`.
+
+**5. `dealturn()` is never called in `advanceStage()`**
+
+```js
+case "turn":
+    break  // ← missing this.dealturn()
+```
+
+**6. `highestbet` initialized referencing `this.bigBlind` before it's defined**
+
+In the table constructor:
+```js
+this.highestbet = this.bigBlind;  // ← bigBlind not defined yet at this point
+```
+`this.bigBlind` is defined further down. This resolves to `undefined`. Move `smallBlind` and `bigBlind` definitions to the top of the constructor.
+
+**7. In `advanceturn()`, the loop logic can get stuck or land on an already-acted player**
+
+```js
+for(let i=0; i<n; i++){
+    this.table.currentTurn = (this.table.currentTurn + 1) % n;
+    const p = this.table.players[this.table.currentTurn]
+    if(!p.hasActed && !p.isAllin && !p.folded){
+        break;
+    }
+}
+```
+
+If no valid player is found (everyone acted/folded/allin), the loop ends without breaking and `currentTurn` lands on whoever it stopped at last — which could be an invalid player. This should fall through to `checkandadvance()` instead.
+
+---
+
+**Summary of fixes in priority order:**
+
+1. Remove duplicate `checkandadvance()` from `handleaction()`
+2. Remove `checkandadvance()` from inside `advanceturn()`
+3. Split `resetHasActed()` into `resetActedOnly()` (for raises) and `resetForNewStreet()` (for stage changes)
+4. Add `this.dealturn()` in the `"turn"` case of `advanceStage()`
+5. Move `smallBlind`/`bigBlind` to top of table constructor
+6. Fix the showdown `checkandadvance()` → explicit `advanceStage()`
+
+Want me to rewrite the corrected engine with all these fixed?
+  
+
+
