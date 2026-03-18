@@ -128,13 +128,13 @@ io.on("connection", (socket)=>{
     //----------------------------------------------handling user actions and gameflow-------------------------------------//
     //once one user is prompted to act, when they act or not,once response is recied, next player is automatically prompted//
     socket.on("useraction", (useraction)=>{
-        stoptimer(socket.myplayer)
         if(socket.mytable.state !== "waiting" && socket.mytable.currentTurn !== null){
             if(socket.myplayer!==socket.mytable.players[socket.mytable.currentTurn]){
                 console.log("not allowd")
                 return;
             }
-            
+
+            stoptimer(socket.myplayer)//stop timer for previous player.after validation.
             processaction(socket.myplayer, socket.mytable, socket.myengine, useraction)
 
         }
