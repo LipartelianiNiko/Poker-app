@@ -103,6 +103,7 @@ class table{
     }
 
     resetfornewgame(){//move dealer itself, thus moving bb and sb
+        //remove 0 balance players before hand starts, kick them out
         this.players = this.players.filter(p => p.balance >= 0)
         this.advancedealer()
         this.pot=0

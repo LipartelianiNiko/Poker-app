@@ -11,6 +11,7 @@ class Engine{
         this.evaluator=new Evaluation()
     }
 
+    //-------------------start/restart game, set and get Blinds, shuffle deck, deal players-----------------------//
     startgame(){
         if((this.table.players.length+this.table.waitingplayers.length)>=2 && this.table.state==="waiting"){
             console.log("starting game")
@@ -68,7 +69,7 @@ class Engine{
 
     
 
-    dealcards(){
+    dealcards(){//helper for dealing player cards
 
         for (let i = 0; i < 2; i++){
             for(let player of this.table.players){
@@ -78,7 +79,7 @@ class Engine{
         }
     }
 
-    //betting, call,raise,fold,all-in,check
+    //--------------------------------betting, call,raise,fold,all-in,check functions------------------//
 
     docall(player){
         if(this.table.highestbet===0 || player.contribution===this.table.highestbet){
@@ -182,6 +183,10 @@ class Engine{
     }
 
 
+
+    //-----------advancing turn and stage, doing checks for eligible players, early wins, early showdown-------//
+    //(ex:1.only on e non-folded, 2.acties all all-in)
+
     advanceturn(){
         //check if there are eligible players to advance to(not folded, not all-in)
         const activePlayers = this.table.players.filter(p => !p.folded && !p.isAllin);
@@ -205,8 +210,15 @@ class Engine{
 
         if(activePlayers.length === 0 || everyoneActed){
             // no one left to act → advance stage
+            console.log("none left")
             this.checkandadvance();
-            console.log("noone left, should advance state")
+            return;
+        }
+
+        //if only one player can act, go to showdown straight
+        if(activePlayers.length === 1 && activePlayers[0].contribution === this.table.highestbet){
+            console.log("only one can act")
+            this.checkandadvance();
             return;
         }
 
@@ -233,7 +245,20 @@ class Engine{
     }
 
 
-    //actions allowed for each state, will be called in the connection
+    //----check if stage can be advanced, no eligible player is left to act---//
+    checkandadvance() {
+        for (let p of this.table.players) {
+            if (p.folded || p.isAllin) continue;
+            if (!p.hasActed) return; // someone still needs to act
+            if (p.contribution !== this.table.highestbet) return; // bets not matched
+        }
+        console.log("advancing state");
+        this.advanceStage();
+    }
+
+
+
+    //-----action handling switch, actions allowed for each state, will be called in the connection---//
     handleaction(player, action){
 
         if(player!==this.table.players[this.table.currentTurn]){
@@ -268,18 +293,10 @@ class Engine{
         return result;
 
     }
-    
-    resetHasActed(){//reset when state is changed
-        this.table.minraise=20
-        for(let p of this.table.players){
-            if(!p.folded && !p.isAllin){
-                p.hasActed=false
-                p.contribution=0
-                p.lastaction="not acted"
-            }
-        }
-    }
 
+
+
+    //------advancing stage, and triggering behaviors that shoudl happen at the start od each stage(deliing cards. starting newgame, showdown)
     advanceStage(){
         let index=this.table.states.indexOf(this.table.state)
         index=(index+1)%this.table.states.length
@@ -321,15 +338,7 @@ class Engine{
 
     }
 
-    checkandadvance() {
-        for (let p of this.table.players) {
-            if (p.folded || p.isAllin) continue;
-            if (!p.hasActed) return; // someone still needs to act
-            if (p.contribution !== this.table.highestbet) return; // bets not matched
-        }
-        console.log("advancing state");
-        this.advanceStage();
-    }
+
 
     //dealing comunity(table) cards, flop, river, trun.
     dealflop(){
@@ -356,6 +365,8 @@ class Engine{
         console.log(this.table.tablecards)
     }
    
+    //----------------showdown functions, hand evaluation and reward giving----------//
+
     handevaluation(){
         const activePlayers = this.table.players.filter(p => !p.folded)
         console.log("evaluating")
@@ -377,24 +388,37 @@ class Engine{
         )
     }
 
+    giverevards(){
+        console.log("giving rewards")
+        const winners = this.table.lastwinners
+        const share = Math.floor(this.table.pot / winners.length)
+        
+        for(let w of winners){
+            w.balance +=share
+            console.log(w.name+" gets "+share)
+        }
+        this.table.pot = 0
 
-  giverevards(){
-    console.log("giving rewards")
-    const winners = this.table.lastwinners
-    const share = Math.floor(this.table.pot / winners.length)
-    
-    for(let w of winners){
-        w.balance +=share
-        console.log(w.name+" gets "+share)
     }
-    this.table.pot = 0
 
-    }
+
+    //-----helper functions, reset hasacted, set to waitind--------//
 
     settowaiting(){
         //just set state to waiting , startgame() calls resetfornewgame, no need here. 
         //gamesplayed is increased in checktoadvance
         this.table.state="waiting"
+    }
+  
+    resetHasActed(){//reset when state is changed
+        this.table.minraise=20
+        for(let p of this.table.players){
+            if(!p.folded && !p.isAllin){
+                p.hasActed=false
+                p.contribution=0
+                p.lastaction="not acted"
+            }
+        }
     }
 
 //end
