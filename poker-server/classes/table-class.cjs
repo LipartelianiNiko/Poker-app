@@ -103,6 +103,7 @@ class table{
     }
 
     resetfornewgame(){//move dealer itself, thus moving bb and sb
+        this.players = this.players.filter(p => p.balance >= 0)
         this.advancedealer()
         this.pot=0
         this.highestbet=0
@@ -113,6 +114,8 @@ class table{
             p.folded=false
             p.usercards=[]
             p.contribution=0
+            p.besthand = null
+            p.lastaction = "not acted"
         }
     }
 

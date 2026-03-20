@@ -183,9 +183,25 @@ class Engine{
 
 
     advanceturn(){
-        //check if everyone has acted and if so advance state
+        //check if there are eligible players to advance to(not folded, not all-in)
         const activePlayers = this.table.players.filter(p => !p.folded && !p.isAllin);
         const everyoneActed = activePlayers.every(p => p.hasActed);
+
+
+        //check if player already won
+        const nonfolded = this.table.players.filter(p => !p.folded)
+        if(nonfolded.length <= 1) {
+            console.log("one or less non-folded players")
+            if(nonfolded.length === 1){
+                nonfolded[0].balance += this.table.pot
+                console.log("winner is"+nonfolded[0].name)
+            }
+            this.table.pot = 0
+            this.table.gamesplayed++
+            this.settowaiting()
+            this.startgame()
+            return
+        }
 
         if(activePlayers.length === 0 || everyoneActed){
             // no one left to act → advance stage
@@ -212,6 +228,7 @@ class Engine{
             this.checkandadvance();
             return;
         }
+
         console.log("turn advanced to "+this.table.players[this.table.currentTurn].name)
     }
 
@@ -305,17 +322,6 @@ class Engine{
     }
 
     checkandadvance() {
-        const activePlayers = this.table.players.filter(p => !p.folded)
-        if(activePlayers.length === 1) {
-            activePlayers[0].balance += this.table.pot
-            this.table.pot = 0
-            this.table.state = "showdown" // skip remaining streets
-            this.table.gamesplayed++
-            this.settowaiting()
-            this.startgame()
-            return
-        }
-
         for (let p of this.table.players) {
             if (p.folded || p.isAllin) continue;
             if (!p.hasActed) return; // someone still needs to act
@@ -364,7 +370,8 @@ class Engine{
 
         let best = activePlayers.reduce((best, p) =>
             this.evaluator.comparehands(p.besthand, best.besthand) > 0 ? p : best
-        )
+        , activePlayers[0])
+
         this.table.lastwinners = activePlayers.filter(p =>
             this.evaluator.comparehands(p.besthand, best.besthand) === 0
         )
@@ -385,6 +392,8 @@ class Engine{
     }
 
     settowaiting(){
+        //just set state to waiting , startgame() calls resetfornewgame, no need here. 
+        //gamesplayed is increased in checktoadvance
         this.table.state="waiting"
     }
 
