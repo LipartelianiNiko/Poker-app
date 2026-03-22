@@ -4,6 +4,14 @@ const http = require("http").createServer(app);
 const io = require("socket.io")(http);
 const path = require("path");
 
+//auth and db
+const authRoutes = require("./routes/auth.cjs")
+const jwt = require("jsonwebtoken")
+require("dotenv").config()
+
+app.use(express.json())
+app.use("/auth", authRoutes)
+
 //import my files
 const User = require("./classes/user-class.cjs");
 const table = require("./classes/table-class.cjs");
@@ -86,17 +94,30 @@ function processaction(player, table, engine, action){
     }
 }
 
+//-------------auth--------------//
+io.use((socket, next) => {
+    const token = socket.handshake.auth.token
+    if (!token) return next(new Error("No token"))
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        socket.userdata = decoded
+        next()
+    } catch (err) {
+        next(new Error("Invalid token"))
+    }
+})
+
 
 //socket connection
 io.on("connection", (socket)=>{
     console.log("user connected!!!")
 
     //-----------------------------------------user object created---------------------------//
-    socket.on("add-user", (namerecived )=>{
-        console.log("name is: "+namerecived)
-        socket.myplayer=new User(namerecived, socket.id)
+    socket.on("add-user", () => {
+        socket.myplayer = new User(socket.userdata.username, socket.id)
+        socket.myplayer.id = socket.userdata.id
         socket.emit("user-added", socket.myplayer)
-    });
+    })
 
     
     //enter lobby first, find table and get added. lobby is created when server starts.
