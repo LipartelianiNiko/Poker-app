@@ -1,4 +1,9 @@
-const mysocket=io("http://localhost:3000")
+//declare connection
+const mysocket = io("http://localhost:3000", {
+    auth: { token: localStorage.getItem("token") },
+    autoConnect: false
+})
+
 
 mysocket.on("connect",()=>{
     console.log("i am connected to server")
@@ -18,7 +23,6 @@ const home=document.getElementById("home-page")
 const gamepage=document.getElementById("game-page")
 
 //buttons
-const authbtn=document.getElementById("auth-btn")
 const leavetbtn=document.getElementById("leave")
 const startbtn=document.getElementById("start")
 const nameinput=document.getElementById("user-name")
@@ -29,6 +33,49 @@ const pot=document.getElementById("pot")
 const turn=document.getElementById("current")
 const timerDisplay=document.getElementById("timer")
 const tabletimer=document.getElementById("tabletimer")
+
+//--------auth-------------------//
+const loginbtn = document.getElementById("login-btn")
+const registerbtn = document.getElementById("register-btn")
+const passwordinput = document.getElementById("user-password")
+const autherror = document.getElementById("auth-error")
+
+
+async function authenticate(endpoint) {
+    const username = nameinput.value
+    const password = passwordinput.value
+    if (!username || !password) {
+        autherror.textContent = "enter username and password"
+        return
+    }
+    try {
+        const res = await fetch(`/auth/${endpoint}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        })
+        const data = await res.json()
+        if (data.error) {
+            autherror.textContent = data.error
+            return
+        }
+        localStorage.setItem("token", data.token)
+        mysocket.auth.token = data.token
+        mysocket.connect()
+        mysocket.once("connect", () => {
+            mysocket.emit("add-user")
+        })
+        myname = username
+        authpage.classList.remove("active")
+        home.classList.add("active")
+    } catch (err) {
+        autherror.textContent = "something went wrong"
+    }
+}
+
+loginbtn.addEventListener("click", () => authenticate("login"))
+registerbtn.addEventListener("click", () => authenticate("register"))
+
 
 
 
@@ -53,21 +100,7 @@ function disablebuttons(){
 }
 disablebuttons()
 //-----------------------------page 1 to page 2, log-in page to home page---------------------//
-authbtn.addEventListener('click',()=>{
 
-    //send entered data to server and create user with entered name
-    let username=nameinput.value;
-    if(username!="" & username!=null){
-        mysocket.emit("add-user", username)
-
-        mysocket.on("user-added", ()=>{
-            authpage.classList.remove("active");
-            home.classList.add("active");
-        })
-    }else{
-        console.log("enter the name")
-    }
-})
 
 mysocket.on("user-added", (datarecived)=>{
     console.log("welcome "+datarecived.name)
