@@ -22,6 +22,8 @@ const authpage=document.getElementById("auth-page")
 const home=document.getElementById("home-page")
 const gamepage=document.getElementById("game-page")
 
+
+
 //buttons
 const leavetbtn=document.getElementById("leave")
 const startbtn=document.getElementById("start")
