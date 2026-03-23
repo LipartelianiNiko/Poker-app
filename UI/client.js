@@ -22,7 +22,19 @@ const authpage=document.getElementById("auth-page")
 const home=document.getElementById("home-page")
 const gamepage=document.getElementById("game-page")
 
-
+//prevent refresh from reseting page
+window.addEventListener("load", () => {
+    const token = localStorage.getItem("token")
+    if(token){
+        mysocket.auth.token = token
+        mysocket.connect()
+        mysocket.once("connect", () => {
+            mysocket.emit("add-user")
+        })
+        authpage.classList.remove("active")
+        home.classList.add("active")
+    }
+})
 
 //buttons
 const leavetbtn=document.getElementById("leave")
