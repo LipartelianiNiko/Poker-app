@@ -70,5 +70,5 @@ node server.cjs
 
 - Side pots not implemented — all-in scenarios with multiple players use simplified pot distribution
 - Reconnection handling not implemented — disconnecting during a game ends your session
--on refresh, page resets to 
+
 
