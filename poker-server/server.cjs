@@ -3,6 +3,8 @@ const app = express();
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
 const path = require("path");
+//pool for db connections
+const pool = require("./DB/db.cjs")
 
 //auth and db
 const authRoutes = require("./routes/auth.cjs")
