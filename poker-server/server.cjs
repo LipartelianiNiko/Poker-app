@@ -73,6 +73,13 @@ function processaction(player, table, engine, action){
     io.to(player.socketid).emit("action-processed", result) 
 
     io.to(table.id).emit("updated-table", table.toJSON())
+    // save balances to db after each action
+    for(const p of table.players){
+        pool.query(
+            "UPDATE users SET balance = $1 WHERE id = $2",
+            [p.balance, p.id]
+        )
+    }
 
     //emit cards when new game starts after very first one is over//
     if(table.state === "preflop") {
