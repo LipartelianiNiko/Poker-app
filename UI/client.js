@@ -1,9 +1,9 @@
 //declare connection
 //no hadcoded url, will automatically connect to whatever server serves.
-const mysocket = io({
+const mysocket = io("poker-app-production-13b6.up.railway.app", {
     auth: { token: localStorage.getItem("token") },
     autoConnect: false
-})
+});
 
 mysocket.on("connect",()=>{
     console.log("i am connected to server")
