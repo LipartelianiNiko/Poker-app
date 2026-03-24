@@ -175,8 +175,10 @@ io.on("connection", (socket)=>{
 });
 
 //-------------------------------------------------start the server-----------------------------------------------//
-http.listen(3000, () => {
-    console.log("Server running on http://localhost:3000");
+//for deployement
+const PORT = process.env.PORT || 3000
+http.listen(PORT, () => {
+    console.log("Server running on port " + PORT);
 });
 
 

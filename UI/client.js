@@ -1,9 +1,9 @@
 //declare connection
-const mysocket = io("http://localhost:3000", {
+//no hadcoded url, will automatically connect to whatever server serves.
+const mysocket = io({
     auth: { token: localStorage.getItem("token") },
     autoConnect: false
 })
-
 
 mysocket.on("connect",()=>{
     console.log("i am connected to server")
