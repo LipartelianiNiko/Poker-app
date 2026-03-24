@@ -1,6 +1,6 @@
 //declare connection
 //no hadcoded url, will automatically connect to whatever server serves.
-const mysocket = io("poker-app-production-13b6.up.railway.app", {
+const mysocket = io("https://poker-app-production-13b6.up.railway.app", {
     auth: { token: localStorage.getItem("token") },
     autoConnect: false
 });
@@ -63,7 +63,7 @@ async function authenticate(endpoint) {
         return
     }
     try {
-        const res = await fetch(`/auth/${endpoint}`, {
+        const res = await fetch(`https://poker-app-production-13b6.up.railway.app/auth/${endpoint}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password })
@@ -148,7 +148,7 @@ mysocket.on("your-turn", (datarecived)=>{
 })
 
 mysocket.on("someoneacted", (datarecived)=>{
-    if(datarecived.who.id=myid){
+    if(datarecived.who.id===myid){
     console.log(datarecived.who+" "+datarecived.what)
 
     }
@@ -224,8 +224,8 @@ mysocket.on("updated-table", (datarecived)=>{
 //-------------------------page 2 to game page, statrt game---------------------------//
 startbtn.addEventListener('click',()=>{
     mysocket.emit("seat-user","client wants to start game");
-
-    mysocket.on("user-seated", (datarecived)=>{
+})
+mysocket.on("user-seated", (datarecived)=>{
         home.classList.remove("active");
         gamepage.classList.add("active");
         console.log(datarecived)
@@ -245,9 +245,7 @@ startbtn.addEventListener('click',()=>{
                 if(timeLeft <= 0) clearInterval(lobbyinterval);
             }, 1000);        
         }
-    });
-
-})
+});
 
 //---------------------------------------betting buttons----------------------------------------------//
 allinbtn.addEventListener("click",()=>{
@@ -327,4 +325,8 @@ function adduserstoui(players){
             j++
         }
 }
+
+mysocket.on("connect_error", (err) => {
+    console.error("Socket error:", err.message);
+});
 

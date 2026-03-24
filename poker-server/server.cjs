@@ -1,10 +1,21 @@
 const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
-const io = require("socket.io")(http);
 const path = require("path");
 //pool for db connections
 const pool = require("./DB/db.cjs")
+
+//for deployement on railway(back) and vercel(front)
+const cors = require("cors");
+app.use(cors());
+const { Server } = require("socket.io");
+
+const io = new Server(http, {
+    cors: {
+        origin: "*", // TEMP: allow all (debug)
+        methods: ["GET", "POST"]
+    }
+});
 
 //auth and db
 const authRoutes = require("./routes/auth.cjs")
