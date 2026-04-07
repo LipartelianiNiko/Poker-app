@@ -326,7 +326,7 @@ function adduserstoui(players){
         }
 }
 
-mysocket.on("already seated", (datarecived) => {
+mysocket.on("already-seated", (datarecived) => {
     console.log(datarecived)
     console.log("you are already seated");
 });

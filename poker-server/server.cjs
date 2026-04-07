@@ -147,7 +147,7 @@ io.on("connection", (socket)=>{
         const result=lobby.seatuser(socket.myplayer)
 
         if(typeof result ==="string"){
-            socket.emit("already seated", result);
+            socket.emit("already-seated", result);
             return;
         }
         socket.mytable=result
