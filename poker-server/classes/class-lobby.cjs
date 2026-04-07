@@ -5,12 +5,24 @@ const Engine = require("../engine/engine.cjs");
 
 class Lobby{
     constructor(){
-    this.tables=new Map();//existing tables
+        this.tables=[];//existing tables
     }
 
 
     //add player to table
     seatuser(myplayer){
+        //check if player is already seated, by checking if the player's id matches any of the seated players' id. if so, dont allow seating.
+        for(let mytable of this.tables){
+            let totalPlayers=[...mytable.players, ...mytable.waitingplayers]
+
+            for(let player of totalPlayers){
+
+                if(player.id===myplayer.id){
+                    return "already seated, cant seat again"
+                }
+            }
+        }
+        //if check doesnt find already seated player with matching id, seat the user.
         const playerTable = this.findTableWithSpace(); 
         playerTable.waitingplayers.push(myplayer)             
         return playerTable;      
@@ -20,18 +32,17 @@ class Lobby{
 
     //find active tables with empty seat
     findTableWithSpace(){
-        for(const table of this.tables.values()){
-            if(table.players.length<6 && table.waitingplayers.length+table.players.length<6){
+        for(const table of this.tables){
+            if(table.waitingplayers.length+table.players.length<6){
                 return table;
             }
         }
         return this.createTable();
     };
 
-    //create table if no active tables have empty seat 
+    //helper to create table if no active tables have empty seat 
     createTable(){
         const newtable=new table()
-        this.tables.set(newtable.id, newtable)
         const myengine=new Engine(newtable)
         newtable.engine=myengine
         return newtable
