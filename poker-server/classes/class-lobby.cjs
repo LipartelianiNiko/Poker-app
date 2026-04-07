@@ -45,6 +45,7 @@ class Lobby{
         const newtable=new table()
         const myengine=new Engine(newtable)
         newtable.engine=myengine
+        this.tables.push(newtable)
         return newtable
     };
     
