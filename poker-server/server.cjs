@@ -144,9 +144,14 @@ io.on("connection", (socket)=>{
     //----------------------SEAT USER and if enough players start game, emit your turn once and res folows----------------------------//
     socket.on("seat-user", (datarecived )=>{
         console.log(datarecived)
-        const table=lobby.seatuser(socket.myplayer)
-        socket.mytable=table
-        socket.myplayer.tableid=table.id
+        const result=lobby.seatuser(socket.myplayer)
+
+        if(typeof result ==="string"){
+            socket.emit("already seated", result);
+            return;
+        }
+        socket.mytable=result
+        socket.myplayer.tableid=result.id
         socket.myengine=socket.mytable.engine
 
         socket.join(socket.mytable.id)

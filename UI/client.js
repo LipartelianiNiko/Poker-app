@@ -326,6 +326,11 @@ function adduserstoui(players){
         }
 }
 
+mysocket.on("already seated", (datarecived) => {
+    console.log(datarecived)
+    console.log("you are already seated");
+});
+
 mysocket.on("connect_error", (err) => {
     console.error("Socket error:", err.message);
 });
