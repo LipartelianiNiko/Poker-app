@@ -1,6 +1,9 @@
 # Poker App — Multiplayer Texas Hold'em
 
-A real-time multiplayer Texas Hold'em poker application built with Node.js and Socket.IO. Players can register, log in, join tables, and play full games with automated turn management, hand evaluation, and persistent balances.
+A real-time multiplayer Texas Hold'em poker application built with Node.js and Socket.IO. Players can register, log in, join tables, and play full games with automated turn management, hand evaluation, and persistent balances. deployed on vescel for frontend and on railway for backend.
+
+you can play here:https://poker-app-roan.vercel.app/
+note:you need at least one more other user to play.
 
 ## Tech Stack
 
