@@ -79,7 +79,10 @@ function startgamehelper(table, engine){
 
     }
 }
+
 function processaction(player, table, engine, action){
+    
+    stoptimer(player)//stop timer for previous player.after validation.
     let result=engine.handleaction(player,action)
     console.log(player.name+" "+result)
 
@@ -180,11 +183,31 @@ io.on("connection", (socket)=>{
                 return;
             }
 
-            stoptimer(socket.myplayer)//stop timer for previous player.after validation.
             processaction(socket.myplayer, socket.mytable, socket.myengine, useraction)
 
         }
     });
+
+    //lisent for disconect which is automatically fired by socket.io when tab, browser or pc is closed.
+    socket.on("disconnect", ()=>{
+        if(!socket.myplayer)return;
+        if (!socket.mytable || !socket.myengine) return
+
+        //mark player disconected, and use it when reseting table for new hand to kick out disconected players, as well as 0 balanced ones
+        socket.myplayer.status="disconnected"
+
+        //fold them untill hand is over, so we dont mess up the flow and user has chance to ontinou playing if the come before hand is over
+        if(socket.mytable.players[socket.mytable.currentTurn]===socket.myplayer){
+            //if its their turn, fold them by processaction and passing in fold actiontype, so that advancetunr is called and flow doesnt brake
+            processaction(socket.myplayer, socket.mytable, socket.myengine,{type: "fold"})
+        }else{
+            //if not, just mark them folded.
+            socket.myplayer.folded=true
+        }
+
+    })
+
+
     
 
 //socket end

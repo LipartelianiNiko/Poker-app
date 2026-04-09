@@ -33,6 +33,7 @@ class table{
 
         this.gamesplayed=0
         this.lobbyTimer=null
+        this.disconected=false
 
 
     }
