@@ -130,6 +130,9 @@ io.use((socket, next) => {
     }
 })
 
+//store created user objects so we dont have to create new object everytime existing user connects.
+const users=[]
+
 
 //socket connection
 io.on("connection", (socket)=>{
@@ -137,10 +140,34 @@ io.on("connection", (socket)=>{
 
     //-----------------------------------------user object created---------------------------//
     socket.on("add-user", () => {
-        socket.myplayer = new User(socket.userdata.username, socket.id)
-        socket.myplayer.id = socket.userdata.id
-        socket.myplayer.status="connected"
-        socket.emit("user-added", socket.myplayer)
+        const incomingId=socket.userdata.id//get id of user connecting on this particular socket
+
+        const existing = connectedUsers.find(p => p.id === incomingId)//check if object withsame id exists in already cretaed objects' array
+
+        if(existing){        existing.socketid = socket.id
+            existing.status = "connected"
+            socket.myplayer = existing
+            // if they were at a table, relink
+            if (existing.tableid) {
+                const mytable = lobby.tables.find(t => t.id === existing.tableid)
+                if (mytable) {
+                    socket.mytable = mytable
+                    socket.myengine = mytable.engine
+                    socket.join(mytable.id)
+                    socket.emit("updated-table", mytable.toJSON())
+                }
+            }
+            socket.emit("user-added", existing)
+        } else {
+            // new player
+            const newplayer = new User(socket.userdata.username, socket.id)
+            newplayer.id = socket.userdata.id
+            newplayer.status = "connected"
+            socket.myplayer = newplayer
+            connectedUsers.push(newplayer)
+            socket.emit("user-added", newplayer)
+        }
+
     })
 
     
