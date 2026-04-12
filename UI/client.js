@@ -181,6 +181,13 @@ mysocket.on("user-cards", (datarecived)=>{
 })
 
 mysocket.on("updated-table", (datarecived)=>{
+    
+    //if player disconected but reconected untill being removed from the table, take them to game page
+    if(!gamepage.classList.contains("active")) {
+        home.classList.remove("active");
+        gamepage.classList.add("active");
+    }
+
     console.log("table-update")
     console.log(datarecived)
 
@@ -330,6 +337,13 @@ mysocket.on("already-seated", (datarecived) => {
     console.log(datarecived)
     console.log("you are already seated");
 });
+
+
+//listener for disconect, so we switch to home page when user is diconected.
+mysocket.on("disconnect", ()=>{
+    gamepage.classList.remove("active");
+    home.classList.add("active");
+})
 
 mysocket.on("connect_error", (err) => {
     console.error("Socket error:", err.message);
