@@ -139,6 +139,7 @@ io.on("connection", (socket)=>{
     socket.on("add-user", () => {
         socket.myplayer = new User(socket.userdata.username, socket.id)
         socket.myplayer.id = socket.userdata.id
+        socket.myplayer.status="connected"
         socket.emit("user-added", socket.myplayer)
     })
 
