@@ -309,15 +309,13 @@ foldbtn.addEventListener("click", ()=>{
 
 //leave table
 leavetbtn.addEventListener("click", () => {
-    mysocket.emit("leave-clicked", "client wants to leave");
-
-    mysocket.on("leaving", ()=>{
+    mysocket.emit("leave");
+});
+ mysocket.on("left", ()=>{
         home.classList.add("active");
         gamepage.classList.remove("active");
-    })
+})
 
-
-});
 //---------------------------end of buttons-------------------------------------------//
 
 function adduserstoui(players){

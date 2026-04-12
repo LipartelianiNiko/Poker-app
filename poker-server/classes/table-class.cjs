@@ -105,7 +105,7 @@ class table{
 
     resetfornewgame(){//move dealer itself, thus moving bb and sb
         //remove 0 balance players before hand starts, kick them out
-        this.players = this.players.filter(p => p.balance > 0 && p.status!=="disconnected")
+        this.players = this.players.filter(p => p.balance > 0 && p.status!=="disconnected" && !p.leaving)
         this.advancedealer()
         this.pot=0
         this.highestbet=0

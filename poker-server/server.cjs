@@ -145,6 +145,7 @@ io.on("connection", (socket)=>{
         const existing = connectedUsers.find(p => p.id === incomingId)//check if object withsame id exists in already cretaed objects' array
 
         if(existing){        
+            //to link object and user, user socket.id, assign new socket id to user's
             existing.socketid = socket.id
             existing.status = "connected"
             socket.myplayer = existing
@@ -175,6 +176,7 @@ io.on("connection", (socket)=>{
     //enter lobby first, find table and get added. lobby is created when server starts.
     //----------------------SEAT USER and if enough players start game, emit your turn once and res folows----------------------------//
     socket.on("seat-user", (datarecived )=>{
+        socket.myplayer.leaving=false
         console.log(datarecived)
         const result=lobby.seatuser(socket.myplayer)
 
@@ -189,6 +191,7 @@ io.on("connection", (socket)=>{
         socket.join(socket.mytable.id)
 
         io.to(socket.mytable.id).emit("user-seated", socket.mytable.toJSON())
+
 
         if(socket.mytable.waitingplayers.length === 2) {
             socket.mytable.lobbyTimer = setTimeout(() => {
@@ -233,6 +236,27 @@ io.on("connection", (socket)=>{
             //if not, just mark them folded.
             socket.myplayer.folded=true
         }
+
+    })
+
+    //listen for leave event, when client clicks leave button
+    socket.on("leave", (datarecived)=>{
+        if(!socket.myplayer)return;
+        if (!socket.mytable || !socket.myengine) return
+
+        console.log(socket.myplayer.name+" "+ " wants to leave")
+        socket.myplayer.leaving=true//mark them, an duse that to filter them out at resetfornewhand()
+
+        
+        //fold them untill hand is over, so we dont mess up the flow
+        if(socket.mytable.players[socket.mytable.currentTurn]===socket.myplayer){
+            //if its their turn, fold them by processaction and passing in fold actiontype, so that advancetunr is called and flow doesnt brake
+            processaction(socket.myplayer, socket.mytable, socket.myengine,{type: "fold"})
+        }else{
+            //if not, just mark them folded.
+            socket.myplayer.folded=true
+        }
+        io.to(socket.mytable.id).emit("left")
 
     })
 

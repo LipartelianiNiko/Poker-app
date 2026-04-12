@@ -23,6 +23,7 @@ class User{
         this.status="disconnected"
         this.timer=null
         this.lastaction="not acted"
+        this.leaving=false
         }
 
 }
