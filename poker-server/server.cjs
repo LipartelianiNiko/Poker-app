@@ -105,6 +105,7 @@ function processaction(player, table, engine, action){
     }
 
     const currentplayer=table.players[table.currentTurn]
+    if (!currentplayer) return
     console.log(currentplayer.name+"'s turn")
     const allowed=table.allowedactions(currentplayer)
     console.log(allowed)
@@ -142,7 +143,7 @@ io.on("connection", (socket)=>{
     socket.on("add-user", () => {
         const incomingId=socket.userdata.id//get id of user connecting on this particular socket
 
-        const existing = connectedUsers.find(p => p.id === incomingId)//check if object withsame id exists in already cretaed objects' array
+        const existing = users.find(p => p.id === incomingId)//check if object withsame id exists in already cretaed objects' array
 
         if(existing){        
             //to link object and user, user socket.id, assign new socket id to user's
@@ -256,7 +257,7 @@ io.on("connection", (socket)=>{
             //if not, just mark them folded.
             socket.myplayer.folded=true
         }
-        io.to(socket.mytable.id).emit("left")
+        io.to(socket.myplayer.socketid).emit("left")
 
     })
 
