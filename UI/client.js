@@ -181,9 +181,9 @@ mysocket.on("user-cards", (datarecived)=>{
 })
 
 mysocket.on("updated-table", (datarecived)=>{
-    
+
     //if player disconected but reconected untill being removed from the table, take them to game page
-    if(!gamepage.classList.contains("active")) {
+    if(!home.classList.contains("active")) {
         home.classList.remove("active");
         gamepage.classList.add("active");
     }
