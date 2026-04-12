@@ -144,7 +144,8 @@ io.on("connection", (socket)=>{
 
         const existing = connectedUsers.find(p => p.id === incomingId)//check if object withsame id exists in already cretaed objects' array
 
-        if(existing){        existing.socketid = socket.id
+        if(existing){        
+            existing.socketid = socket.id
             existing.status = "connected"
             socket.myplayer = existing
             // if they were at a table, relink
