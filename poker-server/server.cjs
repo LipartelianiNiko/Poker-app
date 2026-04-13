@@ -167,7 +167,7 @@ io.on("connection", (socket)=>{
             newplayer.id = socket.userdata.id
             newplayer.status = "connected"
             socket.myplayer = newplayer
-            connectedUsers.push(newplayer)
+            users.push(newplayer)
             socket.emit("user-added", newplayer)
         }
 
@@ -177,6 +177,10 @@ io.on("connection", (socket)=>{
     //enter lobby first, find table and get added. lobby is created when server starts.
     //----------------------SEAT USER and if enough players start game, emit your turn once and res folows----------------------------//
     socket.on("seat-user", (datarecived )=>{
+        if (!socket.myplayer) {
+        socket.emit("error", "Not authenticated — emit add-user first");
+        return;
+    }
         socket.myplayer.leaving=false
         console.log(datarecived)
         const result=lobby.seatuser(socket.myplayer)
