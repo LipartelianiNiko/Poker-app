@@ -250,6 +250,27 @@ io.on("connection", (socket)=>{
         if (!socket.mytable || !socket.myengine) return
 
         console.log(socket.myplayer.name+" "+ " wants to leave")
+
+        //when hand hasnt started.
+        if (table.state === "waiting") {
+            // Remove directly from waitingplayers
+            table.waitingplayers = table.waitingplayers.filter(p => p.id !== player.id);
+            player.tableid = null;
+            socket.leave(table.id);
+            socket.mytable = null;
+            socket.myengine = null;
+            // If lobby timer running and not enough players, cancel it
+            if (table.waitingplayers.length < 2 && table.lobbyTimer) {
+                clearTimeout(table.lobbyTimer);
+                table.lobbyTimer = null;
+            }
+            // Clean up empty table
+            if (table.waitingplayers.length === 0) {
+                lobby.tables = lobby.tables.filter(t => t.id !== table.id);
+            }
+            socket.emit("left");
+            return;
+        }
         socket.myplayer.leaving=true//mark them, an duse that to filter them out at resetfornewhand()
 
         
@@ -261,7 +282,7 @@ io.on("connection", (socket)=>{
             //if not, just mark them folded.
             socket.myplayer.folded=true
         }
-        io.to(socket.myplayer.socketid).emit("left")
+        io.to(socket.myplayer.socketid).emit("you are leaving, will be removed when hand finishes")
 
     })
 
