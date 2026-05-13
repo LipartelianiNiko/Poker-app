@@ -260,6 +260,11 @@ class Engine{
 
     //-----action handling switch, actions allowed for each state, will be called in the connection---//
     handleaction(player, action){
+        //check raise amount's input
+        if (action.amount !== undefined) {
+            action.amount = Number(action.amount);
+            if (!isFinite(action.amount) || action.amount <= 0) return "invalid amount";
+        }
 
         if(player!==this.table.players[this.table.currentTurn]){
             return "not your turn, action not allowed"
