@@ -402,6 +402,7 @@ class Engine{
             w.balance +=share
             console.log(w.name+" gets "+share)
         }
+        
         this.table.pot = 0
 
     }

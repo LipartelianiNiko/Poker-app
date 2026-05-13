@@ -12,7 +12,7 @@ const { Server } = require("socket.io");
 
 const io = new Server(http, {
     cors: {
-        origin: "*", // TEMP: allow all (debug)
+        origin: "https://poker-app-roan.vercel.app", 
         methods: ["GET", "POST"]
     }
 });
@@ -56,6 +56,7 @@ function stoptimer(player) {
 
 //-----------timer helpers----------------------//
 function startgamehelper(table, engine){
+    
     engine.startgame()
     if(table.state==="preflop"){
         for( const p of table.players){
@@ -235,6 +236,28 @@ io.on("connection", (socket)=>{
     socket.on("disconnect", ()=>{
         if(!socket.myplayer)return;
         if (!socket.mytable || !socket.myengine) return
+
+        
+        //disconnect when hand hasnt started.
+        if (table.state === "waiting") {
+            // Remove directly from waitingplayers
+            table.waitingplayers = table.waitingplayers.filter(p => p.id !== player.id);
+            player.tableid = null;
+            socket.leave(table.id);
+            socket.mytable = null;
+            socket.myengine = null;
+            // If lobby timer running and not enough players, cancel it
+            if (table.waitingplayers.length < 2 && table.lobbyTimer) {
+                clearTimeout(table.lobbyTimer);
+                table.lobbyTimer = null;
+            }
+            // Clean up empty table
+            if (table.waitingplayers.length === 0) {
+                lobby.tables = lobby.tables.filter(t => t.id !== table.id);
+            }
+            socket.emit("left");
+            return;
+        }
 
         //mark player disconected, and use it when reseting table for new hand to kick out disconected players, as well as 0 balanced ones
         socket.myplayer.status="disconnected"
