@@ -237,6 +237,9 @@ io.on("connection", (socket)=>{
         if(!socket.myplayer)return;
         if (!socket.mytable || !socket.myengine) return
 
+        const player=socket.myplayer
+        const table=socket.mytable
+
         
         //disconnect when hand hasnt started.
         if (table.state === "waiting") {
@@ -280,6 +283,9 @@ io.on("connection", (socket)=>{
 
         console.log(socket.myplayer.name+" "+ " wants to leave")
 
+        const player=socket.myplayer
+        const table=socket.mytable
+
         //when hand hasnt started.
         if (table.state === "waiting") {
             // Remove directly from waitingplayers
@@ -311,7 +317,7 @@ io.on("connection", (socket)=>{
             //if not, just mark them folded.
             socket.myplayer.folded=true
         }
-        io.to(socket.myplayer.socketid).emit("you are leaving, will be removed when hand finishes")
+        io.to(socket.myplayer.socketid).emit("left")
 
     })
 
