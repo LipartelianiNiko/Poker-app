@@ -146,6 +146,12 @@ io.on("connection", (socket)=>{
         const existing = users.find(p => p.id === incomingId)//check if object withsame id exists in already cretaed objects' array
 
         if(existing){        
+            //first check and detach old socket. 
+            const oldSocket = io.sockets.sockets.get(existing.socketid);
+            if (oldSocket && oldSocket.id !== socket.id) {
+                oldSocket.myplayer = null; // detach old socket from player object
+                oldSocket.disconnect(true);
+            }
             //to link object and user, user socket.id, assign new socket id to user's
             existing.socketid = socket.id
             existing.status = "connected"
